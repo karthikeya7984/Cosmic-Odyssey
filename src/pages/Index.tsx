@@ -1,0 +1,55 @@
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { ArrowLeft, ArrowUpRight, Check, Crosshair, Maximize, Orbit, Play, Rocket, Settings as SettingsIcon, Shield, Trophy, Volume2, VolumeX, Zap } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Switch } from '@/components/ui/switch';
+import GameView from '@/game/GameView';
+import { ACHIEVEMENTS, readSave, Save, Settings, SHIPS, ShipId, writeSave } from '@/game/model';
+import { drawSpace, getPalette, rocket } from '@/game/render';
+import '@/game/cosmic.css';
+type Screen = 'menu' | 'game' | 'how' | 'garage' | 'settings' | 'achievements';
+function safeLoad() { try { return readSave(window.localStorage); } catch { return readSave(); } }
+function SpaceArt({ craft, miniature = false }: { craft?: ShipId; miniature?: boolean }) {
+  const ref = useRef<HTMLCanvasElement>(null);
+  useEffect(() => {
+    const element = ref.current; if (!element) return;
+    const ctx = element.getContext('2d'); if (!ctx) return;
+    const draw = () => {
+      const r = element.getBoundingClientRect(), dpr = Math.min(3, window.devicePixelRatio || 1);
+      element.width = Math.round(r.width * dpr); element.height = Math.round(r.height * dpr); ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      const palette = getPalette();
+      if (miniature) { ctx.clearRect(0, 0, r.width, r.height); ctx.strokeStyle = palette.ink; ctx.fillStyle = palette.space; ctx.lineWidth = 1.3; rocket(ctx, r.width / 2, r.height / 2, -Math.PI / 2, 1.8, craft); }
+      else drawSpace(ctx, r.width, r.height, palette, true);
+    };
+    const observer = new ResizeObserver(draw); observer.observe(element); draw(); return () => observer.disconnect();
+  }, [craft, miniature]);
+  return <canvas ref={ref} className={miniature ? 'ship-art' : 'menu-art'} aria-hidden="true" />;
+}
+export default function Index() {
+  const [screen, setScreen] = useState<Screen>('menu'), [save, setSave] = useState<Save>(safeLoad), [fullscreenNote, setFullscreenNote] = useState('');
+  useEffect(() => { try { writeSave(save, window.localStorage); } catch { /* Device storage may be unavailable. */ } }, [save]);
+  const progress = useCallback((score: number, earned: string[]) => setSave(previous => {
+    const achievements = [...new Set([...previous.achievements, ...earned])];
+    if (score <= previous.best && achievements.length === previous.achievements.length) return previous;
+    return { ...previous, best: Math.max(previous.best, score), achievements };
+  }), []);
+  const setting = <K extends keyof Settings>(key: K, value: Settings[K]) => setSave(prev => ({ ...prev, settings: { ...prev.settings, [key]: value } }));
+  useEffect(() => {
+    document.title = 'COSMIC ODYSSEY — A hand-drawn space adventure';
+    for (const [attribute, value, content] of [['name', 'description', 'Pilot a hand-drawn rocket through hostile orbits in COSMIC ODYSSEY, a playable arcade space shooter.'], ['property', 'og:title', 'COSMIC ODYSSEY'], ['property', 'og:description', 'A hand-drawn arcade space adventure.'], ['property', 'og:type', 'website'], ['name', 'twitter:card', 'summary']] as const) {
+      let meta = document.head.querySelector<HTMLMetaElement>(`meta[${attribute}="${value}"]`); if (!meta) { meta = document.createElement('meta'); meta.setAttribute(attribute, value); document.head.append(meta); } meta.content = content;
+    }
+    document.head.querySelector('meta[property="og:image"]')?.remove(); document.head.querySelector('meta[name="twitter:image"]')?.remove();
+  }, []);
+  if (screen === 'game') return <GameView save={save} onExit={() => setScreen('menu')} onProgress={progress} />;
+  const menuItems = [ { screen: 'how' as const, icon: Crosshair, label: 'How to Play', number: '02' }, { screen: 'garage' as const, icon: Rocket, label: 'Ship Garage', number: '03' }, { screen: 'settings' as const, icon: SettingsIcon, label: 'Settings', number: '04' }, { screen: 'achievements' as const, icon: Trophy, label: 'Achievements', number: '05' } ];
+  return <div className="cosmic-shell">
+    <header className="masthead"><a href="#" className="brand" onClick={e => { e.preventDefault(); setScreen('menu'); }} aria-label="Cosmic Odyssey main menu"><Orbit size={26} /><span>C / O</span></a><div className="masthead-right"><span className="eyebrow">AN INTERSTELLAR ARCADE ADVENTURE</span><Button variant="ghost" size="icon" title={save.settings.sfx ? 'Mute sound' : 'Enable sound'} aria-label={save.settings.sfx ? 'Mute sound' : 'Enable sound'} onClick={() => setting('sfx', !save.settings.sfx)}>{save.settings.sfx ? <Volume2 /> : <VolumeX />}</Button></div></header>
+    {screen === 'menu' ? <main className="main-menu"><SpaceArt /><div className="menu-content"><span className="eyebrow menu-kicker"><span className="signal-dot" /> TRANSMISSION 001 / READY FOR LIFTOFF</span><h1>COSMIC<br /><span>ODYSSEY</span><span className="title-star">✧</span></h1><p className="menu-tagline">A small ship. A vast universe.<br />An odyssey written in the stars.</p><nav className="menu-nav" aria-label="Main menu"><Button className="play-button" onClick={() => setScreen('game')}><Play fill="currentColor" /><span>Play</span><ArrowUpRight /></Button>{menuItems.map(item => <Button variant="ghost" key={item.screen} className="menu-link" onClick={() => setScreen(item.screen)}><item.icon /><span>{item.label}</span><span className="menu-number">{item.number}</span></Button>)}</nav></div><div className="art-caption"><span className="caption-line" /><span>INTO THE UNKNOWN</span><span className="eyebrow">EST. IN A GALAXY FAR, FAR AWAY</span></div></main> : <main className="subpage"><Button variant="ghost" className="back-button" onClick={() => setScreen('menu')}><ArrowLeft />Back to orbit</Button><span className="eyebrow">COSMIC ODYSSEY / {screen.toUpperCase()}</span><h1>{screen === 'how' ? 'Flight manual.' : screen === 'garage' ? 'Choose your craft.' : screen === 'settings' ? 'Mission settings.' : 'Your constellation.'}</h1>
+      {screen === 'garage' && <><p className="page-intro">Three ships. One odyssey.</p><div className="garage-grid">{(Object.entries(SHIPS) as [ShipId, typeof SHIPS.explorer][]).map(([id, craft], index) => <article className={`ship-choice ${save.ship === id ? 'selected' : ''}`} key={id}><div className="ship-index">0{index + 1}<span>{save.ship === id ? 'ACTIVE CRAFT' : 'FLIGHT READY'}</span></div><SpaceArt miniature craft={id} /><h2>{craft.name}</h2><p>{craft.description}</p><div className="ship-stats"><span>HULL <strong>{craft.hullLabel}</strong></span><span>SPEED <strong>{craft.speedLabel}</strong></span></div><Button variant={save.ship === id ? 'default' : 'outline'} onClick={() => setSave(prev => ({ ...prev, ship: id }))}>{save.ship === id ? <Check /> : <Rocket />}{save.ship === id ? 'Selected' : 'Select craft'}</Button></article>)}</div><Button className="mt-8" onClick={() => setScreen('game')}><Play />Launch {SHIPS[save.ship].name}</Button></>}
+      {screen === 'how' && <div className="manual"><section><h2>01 / Flight controls</h2><div className="control-row"><span>Move & turn</span><span><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> or arrow keys</span></div><div className="control-row"><span>Fire lasers</span><kbd>SPACE</kbd></div><div className="control-row"><span>Boost · recharges over time</span><kbd>SHIFT</kbd></div><div className="control-row"><span>Shield · 3s protection, 14s recharge</span><kbd>E</kbd></div><div className="control-row"><span>Pause / resume</span><kbd>ESC</kbd></div><p>On touch screens, hold the directional arrows and Fire, Boost, or Shield. Your ship fires in the direction it faces. Mouse aiming can be enabled in Settings.</p></section><section><h2>02 / Mission</h2><p>Clear 8 hostiles in the Quiet Belt, then 12 in Hostile Orbit. Defeat the Sentinel in sector 03 to finish your odyssey. Keep moving, dodge enemy fire, and destroy or avoid the asteroid belt.</p><p>Each cleared sector repairs 25 hull. Enemy kills earn 100 points; the Sentinel earns 1,500. Destroyed asteroids earn 25.</p><h2>03 / Cosmic salvage</h2><div className="salvage-list"><span>+ / Health: +30 hull</span><span>E / Shield: 8 seconds</span><span>R / Rapid fire: 12 seconds</span><span>Ⅱ / Double shot: 12 seconds</span><span>» / Overdrive: 12 seconds</span><span>✧ / Crystal: +150 points</span></div></section><Button onClick={() => setScreen('game')}><Play />Ready for liftoff</Button></div>}
+      {screen === 'settings' && <div className="settings-list"><div className="setting-row"><label htmlFor="volume">Sound volume</label><div className="volume-control"><Volume2 size={18} /><input id="volume" type="range" min="0" max="100" value={Math.round(save.settings.volume * 100)} onChange={e => setting('volume', Number(e.target.value) / 100)} /><span>{Math.round(save.settings.volume * 100)}%</span></div></div>{([{ key: 'sfx', label: 'Sound effects' }, { key: 'shake', label: 'Screen shake' }, { key: 'particles', label: 'Exhaust & explosion particles' }, { key: 'mouseAim', label: 'Mouse aiming' }] as const).map(item => <div className="setting-row" key={item.key}><label htmlFor={item.key}>{item.label}</label><Switch id={item.key} checked={save.settings[item.key]} onCheckedChange={value => setting(item.key, value)} /></div>)}<div className="setting-row"><label htmlFor="difficulty">Difficulty</label><select id="difficulty" value={save.settings.difficulty} onChange={e => setting('difficulty', e.target.value as Settings['difficulty'])}><option value="easy">Easy</option><option value="normal">Normal</option><option value="hard">Hard</option></select></div><div className="setting-row"><span>Fullscreen</span><Button variant="outline" disabled={!document.fullscreenEnabled} onClick={async () => { try { if (document.fullscreenElement) await document.exitFullscreen(); else await document.documentElement.requestFullscreen(); setFullscreenNote(''); } catch { setFullscreenNote('Fullscreen is unavailable in this preview.'); } }}><Maximize />Toggle fullscreen</Button></div>{fullscreenNote && <p role="status">{fullscreenNote}</p>}<p className="page-intro">Preferences are saved on this device.</p></div>}
+      {screen === 'achievements' && <><p className="page-intro">{save.achievements.length} / {ACHIEVEMENTS.length} signals discovered.</p><div className="achievement-list">{ACHIEVEMENTS.map((a, i) => <div className={`achievement-row ${save.achievements.includes(a.id) ? 'unlocked' : ''}`} key={a.id}><span className="achievement-symbol">{save.achievements.includes(a.id) ? <Trophy /> : <Orbit />}</span><div><h2>{a.name}</h2><p>{a.detail}</p></div><span className="eyebrow">{save.achievements.includes(a.id) ? 'DISCOVERED' : `0${i + 1} / UNEXPLORED`}</span></div>)}</div></>}
+    </main>}
+    <footer className="mission-footer"><div><span className="eyebrow">PERSONAL BEST</span><strong>{String(save.best).padStart(6, '0')}</strong></div><div className="footer-ship"><Rocket size={17} /><span>{SHIPS[save.ship].name}</span><span className="eyebrow">FLIGHT READY</span></div><span className="footer-note">STAY CURIOUS. KEEP EXPLORING. <span>✧</span></span></footer>
+  </div>;
+}

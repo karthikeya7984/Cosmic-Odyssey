@@ -1,0 +1,37 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 4%;
+    --foreground: 60 6% 91%;
+    --card: 0 0% 6%;
+    --card-foreground: 60 6% 91%;
+    --popover: 0 0% 7%;
+    --popover-foreground: 60 6% 91%;
+    --primary: 60 6% 91%;
+    --primary-foreground: 0 0% 4%;
+    --secondary: 0 0% 12%;
+    --secondary-foreground: 60 6% 91%;
+    --muted: 0 0% 12%;
+    --muted-foreground: 0 0% 52%;
+    --accent: 0 0% 17%;
+    --accent-foreground: 60 6% 91%;
+    --destructive: 12 72% 64%;
+    --destructive-foreground: 0 0% 4%;
+    --border: 0 0% 21%;
+    --input: 0 0% 26%;
+    --ring: 60 6% 91%;
+    --radius: .25rem;
+    --success: 60 6% 91%;
+    --warning: 42 70% 65%;
+    --info: 165 32% 72%;
+    --overlay: 0 0% 4% / .92;
+  }
+  * { @apply border-border; }
+  body { @apply bg-background text-foreground; margin: 0; font-family: 'Trebuchet MS', 'Segoe UI', sans-serif; }
+  code, pre { font-family: 'Courier New', monospace; }
+  button, a, input, select { -webkit-tap-highlight-color: transparent; }
+  ::selection { background: hsl(var(--foreground)); color: hsl(var(--background)); }
+}

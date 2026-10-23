@@ -1,0 +1,41 @@
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "useDefineForClassFields": true,
+    "lib": ["ES2020", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "skipLibCheck": true,
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "noEmit": true,
+    "jsx": "react-jsx",
+    "strict": true,
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./src/*"],
+      "@/components/*": ["./src/Components/*", "./src/components/*"]
+    }
+  },
+  "include": [
+    "src/main.tsx",
+    "src/App.tsx",
+    "src/vite-env.d.ts",
+    "src/lib/**/*",
+    "src/hooks/**/*",
+    "src/pages/**/*",
+    "src/game/GameView.tsx",
+    "src/game/audio.ts",
+    "src/game/model.ts",
+    "src/game/render.ts",
+    "src/Components/ui/button.tsx",
+    "src/Components/ui/switch.tsx",
+    "src/Components/ui/toast.tsx",
+    "src/Components/ui/toaster.tsx",
+    "src/Components/ui/tooltip.tsx",
+    "src/Components/ui/sonner.tsx",
+    "src/Components/ui/use-toast.ts"
+  ],
+  "exclude": ["**/*.test.ts", "node_modules"]
+}
