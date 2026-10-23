@@ -3,6 +3,7 @@
   "private": true,
   "version": "1.0.0",
   "type": "module",
+  "homepage": "https://shaileshs-triplet-solver.lovable.app",
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",

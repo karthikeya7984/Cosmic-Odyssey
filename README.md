@@ -1,6 +1,21 @@
 # COSMIC ODYSSEY
 
-A self-contained 2D real-time arcade space shooter built with React, TypeScript, Vite, Tailwind CSS, and HTML5 Canvas. Its visuals feature a monochrome, hand-drawn-inspired line-art aesthetic with custom Web Audio sound effects.
+[![Live Demo](https://img.shields.io/badge/🎮_Live_Demo-Play_Now-000000?style=for-the-badge&logo=rocket&logoColor=white&labelColor=1a1a1a)](https://shaileshs-triplet-solver.lovable.app)
+[![React](https://img.shields.io/badge/React-18-61DAFB?style=for-the-badge&logo=react&logoColor=black)](https://react.dev/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![Vite](https://img.shields.io/badge/Vite-6-646CFF?style=for-the-badge&logo=vite&logoColor=white)](https://vitejs.dev/)
+
+> A self-contained 2D real-time arcade space shooter built with React, TypeScript, Vite, Tailwind CSS, and HTML5 Canvas. Its visuals feature a monochrome, hand-drawn-inspired line-art aesthetic with custom Web Audio sound effects.
+
+---
+
+## 🚀 Live Demo
+
+Play the deployed real-time application directly in your browser:
+
+👉 **[https://shaileshs-triplet-solver.lovable.app](https://shaileshs-triplet-solver.lovable.app)**
+
+---
 
 ## Features
 - **Monochrome Hand-Drawn Space Art**: Custom procedural rendering of orbits, planets, stars, and ships on canvas.
